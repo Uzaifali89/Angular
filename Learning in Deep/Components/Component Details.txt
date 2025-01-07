@@ -1,0 +1,318 @@
+Advanced Concepts :
+Components :
+Why we split components ?
+Because every component should do only one thing . 
+If you see that multiple components have same structure than make a component of this structure .. In simple word if you see markup duplication so there is a opportunity to create shared component ..
+Browser DOM should be leaner for best practice .
+Extending built-in element( like <button> or other elements )with custom component via attribute selector .
+  if you want to extend functionality of this element . create component and in component decorator change the selector name into attribute selector like this :
+    selector : 'button[appButton]',
+	 angular will identify button when you add attribute of appButton in it like this <button appButton></button> it will work as angular button or custom button component.
+       and its also add in imports like ButtonComponent
+	  
+	 
+Ng content with selector :
+when you want to use two or more time <ng-content> in html then it need a selector to identify .
+e.g 
+ <ng-content select = ".icon">
+ it will catter the data of icon class element in that specific <ng-content>
+ <span class="icon">icon<span> this element set into ng content of other component.
+ And the other way of selector approach is using ngProjectAs ="" instead of using class
+ 
+ button.component.html{  
+ <ng-content select="icon"></ng-content>
+ }
+ 
+ other component{
+            <span ngProjectAs="icon">
+              →
+            </span>
+ }
+ 
+ if ng-content does not use of define the selector you can set by default value in it like this
+ 
+ button.component.html{  
+ <ng-content select="icon">
+ xxxx
+ </ng-content>
+ }
+ 
+ the xxxx value is default if the selector is not use or call by other component .
+ and if you want to add multiple selector in ng-content the use coma by separating the names like this
+ <ng-content select="input,textarea"/>
+ 
+ CSS::
+ Component specific css are applied on to only specific component if we use other component in our main component and other component have also same elements but css will not apply on these elements of other component .
+ but if you want to use it than disable encapsulation in main component decorator by using ViewEncapsulation enum .. like this 
+  
+  encapsulation:ViewEncapsulation.None
+
+Component Host Element !
+Every Angular component has host element . A component with a selector of 'app-header' target an element <app-header> in real dom . in other words the selector of component is host element in dom .
+The component host element is not considered a part of template or html but it will use in css by using :host .
+
+Setting host element properties in component decorator by adding ::
+host:{
+class : "control"
+'(click)':'OnClick()'
+}
+
+Use host in css as the wrapper or maine element :
+<div id = "status">
+*** some html code ***
+</div>
+so if the div is your starting tag than replace it with host when you styling for example :
+
+#status {
+background : black
+}
+
+Change into 
+
+:host {
+background : black
+}
+
+The othe way of host binding .
+In component class ::
+ @HostBinding() className = 'control' (this hostbinding method find the property of (className) in host element if it's found that than add the value and if it is not found than create a property add the value in it 
+ but if you want to find not the variable name than add name into paramter of host Binding like this 
+ @HostBinding('class') className = "control" now it will find the name of 'class' property in host element.
+
+@HostListener('click') OnClick(){} this is the alternative way of event lister on host element.
+
+How to access host element programmatically ..
+private element = inject(ElementRef);
+
+now in this element varaiable you can access all thing of host element .
+
+Class Binding Feature
+<div [class.status] = "currentStatus === 'offline'" >
+this syntax will add class = "status" in div if currentStatus attribute is offline .
+
+Other way of class binding to add multiple class and multiple conditions 
+<div [class]="{
+    status:true,
+    'status-online':currentStatus === 'online',
+    'status-offline':currentStatus === 'offline'
+}">
+
+this syntax adds the class = "status " and the other classes also adds if the condition is true .
+
+STYLE BINDING Feature
+<div [style]={
+'font-size':'64px' and also you can type in camel case like this (fontSize : "'64px'")
+}>
+
+and the other way 
+<div [style.fontSize]="64px"> also you can add calculated value like this ([style.fontSize]="(MaxValue + MinValue) / 100 + '%'")
+
+Literal Types :
+Its allow the specific value of given datatyple instead of all values.
+ currentStatus:"online" | "offline" | "unknown" = "online";
+ 
+Interval Method:
+it takes two argument one is a function and the other is time in milisecond to rerun the function in argument of given time .
+
+  setInterval(() => {
+    const random_time = Math.random();  // return 0 - 1 like 0.999999
+
+    if(random_time > 0.5){
+      this.currentStatus = "online"
+    }
+    else if(random_time < 0.9)
+    {
+       this.currentStatus = "offline"
+    }
+    else {
+      this.currentStatus = "unknown"
+    }
+  }, 1000
+  
+  
+Component LifeCycle::
+
+Life cycle hooks :
+
+ngOnInit() => Runs once after angular has intialized all the component inputs .
+
+Why ngOnInit instead of Constructor ::::::  You should write your logic on ngOnInit() instead of constructor its considered a best practice . And also constructor won't get the input value on intialization .
+
+When you declare ngOnInit but types wrong name it will not give error because typescript considered it as a custom function to prevent this issue angular team give us a recommended way because of this situation 
+Its need to inherit the interface if OnInit to our component when you inherit it then it will give you the error if you will not use ngOnInit or spelling mistake..
+Like this ::
+export class ServerStatusComponent implements OnInit{}
+
+
+ngOnChanges() = Its executed when input or inputs of component are received and changed .And also gives the changed and received inputs in the ngOnChanges() argument by using SimpleChanges .
+
+ ngOnChanges(changes: SimpleChanges) {
+    console.log('ngOnChanges');
+    console.log(changes);
+  }
+
+ngOnDestroy() = It will execute before component instance going to be destroy . 
+
+  ngOnDestroy() {
+    console.log('ngOnDestroy');
+  }
+  
+Alternative way of ngDestroy in angular > 16 : First we need to inject DestroyRef in our component and then use in any method of component multiple times .  
+private destroyRef = inject(DestroyRef);
+
+method{
+
+ this.destroyRef.OnDestroy(()=>{
+
+  clearinterval(interval);
+
+ })
+
+}
+
+ 
+ngOnCheck() = It will invoke when anything anywhere in the application changed any events or anything not only the component but in the entire application.
+ngAfterContentInit = It execute when ng-content tag get the value or content.
+ngAfterContentChecked = It executes when ng-content tag value changed it detect the content by angular content detection method .
+ngAfterViewInit = It execute when template of component intialized also include ng-content also .
+ngAfterViewChecked = it executes when any change occure in component template .In other words it detect any UI changes of this component.
+afterRender: allows you to register a callback that executes after every render cycle.
+afterNextRender: registers a callback that executes ONLY ONCE after the next render cycle, when the DOM is loaded.
+
+  constructor(){
+    afterRender(()=>{
+      console.log("after render");
+    });
+
+    afterNextRender(() => {
+      console.log("after next render")
+    })
+  }
+
+
+Form Submission (Template Variable) :
+
+ Other way to get the input value of form instead of two way binding :
+ Template Variables :
+   Get the Complete DOM element into your component on form submission by using #anyname in element and pass this into argument of ngSubmit function  :
+     (ngSubmit)=OnSubmit(anyname)
+	   In T.S: 
+     	   OnSubmit(title:HTMLInputElement){ console.log(title.value)} its need the element datatype to get .. this is the example of input type and there is other type to get text area or other element .
+	   
+   also if you dont need to get complete element or the requirement is only value then pass the element value in the ngSubmit title :
+       (ngSubmit) = OnSubmit(anyname.value)
+	    In T.S:
+		   OnSubmit(title:string){
+		   console.log(title)
+		   }
+		   
+    if you add template variable in component selector it will get the component instance .
+	    <app-component #ctrl> => ctrl is component instance when you get into your submit form function.
+		
+	You get your form element by using template variable for example you want to reset your form after form submission . 
+	    <form (ngSubmit)="OnSubmit(inputTitle,form)" #form>
+		
+	@ViewChild (Alternative way of getting template variable) :
+	    @ViewChild('form') form : ElementRef<HTMLFormInput>; this will find the template variable of #form in your component template.
+		this.form?.nativeElement.reset(); You can use form element by using nativeElement because the type of form is elementRef .
+		  
+		You can also get component instance with this by adding component name in the parameter .
+		    @ViewChild(ButtonComponent) button : ButtonComponent;
+			
+		To get multiple components or element you can use @ViewChildren
+			
+		ViewChild Signal Function : (Angular > 17.3)
+		     private form = viewChild<ElementRef<HTMLFormElement>>('form');
+			 this.form()?.nativeElement.reset();
+		
+		   With Required: 
+		     private form = viewChild.required<ElementRef<HTMLFormElement>>('form');
+	         this.form().nativeElement.reset();
+			 
+	        ViewChild VS ContentChild :
+			  ViewChild is use for all the element which is part of the component.
+			  ContentChild is use for ng-content elements because project content(ng-content) are not the part of the component .
+			  
+			ContentChild :
+	            @ContentChild('input') private control? : ElementRef<HTMLInputElement|HTMLTextAreaElement>
+			  Signal:
+			     private control = contentChild<ElementRef<HTMLInputElement|HTMLTextAreaElement>>('input');
+				 
+			  .html :
+                  <textarea name="Request" id="Request" rows="3" #input></textarea>
+				  
+				  
+				  
+Signal Effect : 
+   Signals are not working as subscription but if you want to subscription in signal than use effect() function ..
+   When working with Signal effects, you sometimes might need to perform some cleanup work before the effect function runs again (e.g., to clear some timer or something like that).
+
+Angular's effect() allows you to do that!
+
+It does provide you with an onCleanup hook which you can execute as part of your effect function to define what should happen before the effect code runs the next time:
+
+effect((onCleanup) => {
+  const tasks = getTasks();
+  const timer = setTimeout(() => {
+    console.log(`Current number of tasks: ${tasks().length}`);
+  }, 1000);
+  onCleanup(() => {
+    clearTimeout(timer);
+  });
+});
+
+@For loop aditional info :
+ --for loop gives you some variables inside if forloop brackets/boundry {}
+ Variables =>
+   {{ $first }} : If the entry is first its give you the true / false 
+   {{ $last  }} :  if the entry is last its give you true/false.
+   {{ $count }} : count of entry
+   
+   @empty = if the loop is empty and you want to show that <p>no entries found</p> 
+       @for(){
+	   //some code
+	   }
+       @empty{
+	    // some code 
+	   }
+	   
+	   
+Signal Update :
+   for updating the value of signal.
+ 
+ isVisible = signal(true);
+ 
+ OnToggle(){
+   this.isVisible.update((wasVisible)=>!wasVisible);
+ }  
+
+
+Features of @Input/input() : 
+Alias : you can set alian in input but it will use in other component not the current component but this is not the recommended approach .
+         data = input({alias:'ticket'})  ;
+Transform : you can transform the input value by using this like if input value is 2 you can transform by adding + 2 and the value will be 4 .
+         data = input({transform:(value : number)=> value + 2})
+		 
+		 
+Feature of output():
+Alias : you can set alian in output but it will use in other component not the current component but this is not the recommended approach . 
+         data = output({alias:'ticket'})  ;
+		 
+Two way binding : 
+ Two way binding is the set of input and output we retrive values and we gave values .
+  the other way in modern angular > 17 
+   there is new function to achive two way binding is model() and its a signal it will work as a input and output .
+     size = model.required<{width:string,height:string}>();
+	 
+	 if you want to reset the value 
+	 onReset(){
+	  this.size.set({
+	    width : '200',
+		height: '200'
+	  })
+	 }
+	 
+	 .html:
+	    <input ([ngModel])="model().height"/>
+	   
+	   
